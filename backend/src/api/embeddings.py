@@ -6,35 +6,14 @@ All endpoints require authentication via X-Vapi-Secret header.
 """
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
-from pydantic import BaseModel, Field
+from src.models.embeddings import GenerateEmbeddingsRequest, CacheInvalidateRequest
 from src.services.embedding_service import generate_embeddings_for_restaurant
-from src.config import get_settings
+from src.services.cache import clear_cache
+from src.services.auth import verify_vapi_secret
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-settings = get_settings()
-
-
-def _verify_secret(x_vapi_secret: Optional[str]) -> None:
-    """Verify Vapi secret for endpoint authentication."""
-    if not x_vapi_secret or x_vapi_secret != settings.vapi_secret_key:
-        logger.warning("Invalid or missing secret on embeddings endpoint")
-        raise HTTPException(status_code=401, detail="Invalid authentication")
-
-
-class GenerateEmbeddingsRequest(BaseModel):
-    restaurant_id: str = Field(..., description="Restaurant UUID",
-                               example="04529052-b3dd-43c1-a534-c18d8c0f4c6d")
-    category: str | None = Field(
-        None, description="Category to generate (menu, modifiers, hours, zones)", example="menu")
-
-
-class CacheInvalidateRequest(BaseModel):
-    restaurant_id: str = Field(..., description="Restaurant UUID",
-                               example="04529052-b3dd-43c1-a534-c18d8c0f4c6d")
-    category: str | None = Field(
-        None, description="Category to invalidate (menu, modifiers, hours, zones)", example="menu")
 
 
 @router.post(
@@ -63,7 +42,7 @@ async def generate_embeddings(
     x_vapi_secret: Optional[str] = Header(
         None, alias="X-Vapi-Secret", description="Vapi webhook secret")
 ):
-    _verify_secret(x_vapi_secret)
+    verify_vapi_secret(x_vapi_secret)
 
     try:
         result = await generate_embeddings_for_restaurant(
@@ -104,9 +83,7 @@ async def invalidate_cache(
     x_vapi_secret: Optional[str] = Header(
         None, alias="X-Vapi-Secret", description="Vapi webhook secret")
 ):
-    _verify_secret(x_vapi_secret)
-
-    from src.services.cache import clear_cache
+    verify_vapi_secret(x_vapi_secret)
 
     try:
         clear_cache(request.restaurant_id, request.category)

@@ -7,17 +7,13 @@ including automatic phone number assignment.
 from fastapi import APIRouter, HTTPException, Header, Request
 from typing import Optional
 from src.models.restaurants import CreateRestaurantRequest, RestaurantResponse
-from src.services.supabase_client import get_supabase_service_client
-from src.services.phone_service import assign_phone_to_restaurant
-from src.config import get_settings
+from src.services.restaurant_service import create_restaurant as create_restaurant_service
 from src.services.auth import verify_vapi_secret
 from src.middleware.request_id import get_request_id
 import logging
-from uuid import uuid4
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 @router.post(
@@ -53,37 +49,19 @@ def create_restaurant(
     """
     verify_vapi_secret(x_vapi_secret)
 
-    supabase = get_supabase_service_client()
-
-    api_key = request.api_key or f"api_key_{uuid4().hex[:16]}"
-
     try:
-        result = supabase.table("restaurants").insert({
-            "name": request.name,
-            "api_key": api_key
-        }).execute()
-
-        if not result.data:
-            raise HTTPException(
-                status_code=500, detail="Failed to create restaurant")
-
-        restaurant_data = result.data[0]
-        restaurant_id = restaurant_data["id"]
-        phone_number = None
-
-        if request.assign_phone:
-            try:
-                phone_number = assign_phone_to_restaurant(
-                    restaurant_id, force_twilio=request.force_twilio)
-            except Exception as e:
-                logger.warning(
-                    f"Failed to assign phone number to restaurant {restaurant_id}: {e}")
+        restaurant_data = create_restaurant_service(
+            name=request.name,
+            api_key=request.api_key,
+            assign_phone=request.assign_phone,
+            force_twilio=request.force_twilio
+        )
 
         return RestaurantResponse(
-            id=restaurant_id,
+            id=restaurant_data["id"],
             name=restaurant_data["name"],
             api_key=restaurant_data["api_key"],
-            phone_number=phone_number,
+            phone_number=restaurant_data["phone_number"],
             created_at=restaurant_data["created_at"]
         )
 

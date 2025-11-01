@@ -49,3 +49,7 @@ dist/
 build/
 *.egg-info/
 
+# Ignore ignore files themselves
+.gitignore
+.dockerignore
+

@@ -7,7 +7,7 @@ including listing call history and creating new call entries.
 from fastapi import APIRouter, HTTPException, Header, Query
 from typing import Optional
 from src.models.calls import CreateCallRequest
-from src.services.supabase_client import get_supabase_client, get_supabase_service_client
+from src.services.call_service import list_calls as list_calls_service, create_call as create_call_service
 import logging
 
 router = APIRouter()
@@ -61,14 +61,9 @@ def list_calls(
         raise HTTPException(
             status_code=422, detail="restaurant_id is required")
 
-    supabase = get_supabase_client()
-
     try:
-        resp = supabase.table("call_history").select(
-            "id, started_at, ended_at, duration_seconds, caller, outcome, messages"
-        ).eq("restaurant_id", restaurant_id).order("started_at", desc=True).limit(limit).execute()
-
-        return {"data": resp.data or []}
+        calls = list_calls_service(restaurant_id, limit)
+        return {"data": calls}
     except Exception as e:
         logger.error(
             f"Error fetching calls for restaurant_id={restaurant_id}: {e}", exc_info=True)
@@ -115,25 +110,16 @@ def create_call(
         raise HTTPException(
             status_code=422, detail="restaurant_id is required")
 
-    record = {
-        "restaurant_id": restaurant_id,
-        "started_at": payload.started_at,
-        "ended_at": payload.ended_at,
-        "duration_seconds": payload.duration_seconds,
-        "caller": payload.caller,
-        "outcome": payload.outcome,
-        "messages": payload.messages or [],
-    }
-
-    supabase = get_supabase_service_client()
     try:
-        resp = supabase.table("call_history").insert(record).execute()
-
-        if not resp.data:
-            raise HTTPException(
-                status_code=500, detail="Failed to create call record")
-
-        call_id = resp.data[0].get("id")
+        call_id = create_call_service(
+            restaurant_id=restaurant_id,
+            started_at=payload.started_at,
+            ended_at=payload.ended_at,
+            duration_seconds=payload.duration_seconds,
+            caller=payload.caller,
+            outcome=payload.outcome,
+            messages=payload.messages
+        )
         return {"success": True, "id": call_id}
     except HTTPException:
         raise
