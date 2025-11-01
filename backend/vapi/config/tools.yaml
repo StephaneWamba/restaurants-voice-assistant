@@ -1,0 +1,48 @@
+# Vapi Function Tool Definitions
+# These tools are used to query different categories of restaurant information
+
+tools:
+  - name: get_menu_info
+    description: "Answer questions about menu items (names, descriptions, prices, availability)"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "The customer's question about menu items"
+      required:
+        - query
+
+  - name: get_modifiers_info
+    description: "Answer questions about modifiers/options and their prices"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "The customer's question about modifiers or options"
+      required:
+        - query
+
+  - name: get_hours_info
+    description: "Answer questions about operating hours, business hours, and when the restaurant is open"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "The customer's question about operating hours"
+      required:
+        - query
+
+  - name: get_zones_info
+    description: "Answer questions about delivery zones, delivery fees, and delivery area information"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "The customer's question about delivery zones and fees"
+      required:
+        - query
+

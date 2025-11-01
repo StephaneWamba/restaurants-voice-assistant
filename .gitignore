@@ -1,0 +1,51 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.local
+
+# Private files
+private/
+render.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv
+
+# Node
+node_modules/
+.next/
+out/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# Build
+dist/
+build/
+*.egg-info/
+

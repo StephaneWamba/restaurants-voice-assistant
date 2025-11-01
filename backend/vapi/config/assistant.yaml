@@ -1,0 +1,13 @@
+# Vapi Assistant Configuration
+
+assistant:
+  name: "Restaurant Voice Assistant"
+  model:
+    provider: "openai"
+    model: "gpt-4o-mini"
+    temperature: 0.7
+  # Voice config removed - will use Vapi defaults
+  # Additional assistant settings can be added here
+  # timeout_seconds: 30
+  # max_duration_seconds: 600
+
